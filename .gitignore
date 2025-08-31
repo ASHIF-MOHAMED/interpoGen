@@ -1,14 +1,67 @@
 *.pyc
 *.py~
 *.py#
+__pycache__/
+*.py[cod]
+*$py.class
 
+# Model weights and checkpoints
 *.pkl
-output/*
-train_log/*
-*.mp4
+*.pth
+*.pt
+*.bin
+# Keep core model file needed for inference
+!train_log/flownet.pkl
 
+# Output and processed data directories
+output/
+output_*/
+extracted_frame/
+extracted_frames/
+
+# Videos
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.gif
+# Keep demo videos
+!demo/*.gif
+!demo/*.mp4
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.tif
+*.tiff
+# Keep demo images
+!demo/*.png
+!demo/*.jpg
+
+# IDE and environment
 test/
 .idea/
-*.npz
+.vscode/
+venv/
+env/
+.ipynb_checkpoints/
 
+# Temporary and compressed files
+*.npz
 *.zip
+*.log
+tmp/
+temp/
+
+# FFmpeg binary
+ffmpeg.exe
+ffmpeg
+ffprobe.exe
+ffprobe
+
+# OS generated files
+.DS_Store
+Thumbs.db

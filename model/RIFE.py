@@ -47,14 +47,12 @@ class Model:
             }
             
         if rank <= 0:
-            self.flownet.load_state_dict(convert(torch.load(f'{path}/flownet.pkl', map_location=torch.device('cuda'))))        
+            self.flownet.load_state_dict(convert(torch.load(f'{path}/flownet.pkl', map_location=torch.device('cpu'))))       
     def save_model(self, path, rank=0):
         if rank == 0:
             torch.save(self.flownet.state_dict(),'{}/flownet.pkl'.format(path))
 
-    def inference(self, img0, img1, scale=1, scale_list=None, TTA=False, timestep=0.5):
-        if scale_list is None:
-            scale_list = [4, 2, 1]
+    def inference(self, img0, img1, scale=1, scale_list=[4, 2, 1], TTA=False, timestep=0.5):
         for i in range(3):
             scale_list[i] = scale_list[i] * 1.0 / scale
         imgs = torch.cat((img0, img1), 1)

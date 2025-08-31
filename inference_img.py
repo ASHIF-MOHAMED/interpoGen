@@ -50,20 +50,12 @@ model.device()
 if args.img[0].endswith('.exr') and args.img[1].endswith('.exr'):
     img0 = cv2.imread(args.img[0], cv2.IMREAD_COLOR | cv2.IMREAD_ANYDEPTH)
     img1 = cv2.imread(args.img[1], cv2.IMREAD_COLOR | cv2.IMREAD_ANYDEPTH)
-    if img0 is None:
-        raise FileNotFoundError(f"Image {args.img[0]} could not be loaded. Check the file path or file integrity.")
-    if img1 is None:
-        raise FileNotFoundError(f"Image {args.img[1]} could not be loaded. Check the file path or file integrity.")
     img0 = (torch.tensor(img0.transpose(2, 0, 1)).to(device)).unsqueeze(0)
     img1 = (torch.tensor(img1.transpose(2, 0, 1)).to(device)).unsqueeze(0)
 
 else:
     img0 = cv2.imread(args.img[0], cv2.IMREAD_UNCHANGED)
     img1 = cv2.imread(args.img[1], cv2.IMREAD_UNCHANGED)
-    if img0 is None:
-        raise FileNotFoundError(f"Image {args.img[0]} could not be loaded. Check the file path or file integrity.")
-    if img1 is None:
-        raise FileNotFoundError(f"Image {args.img[1]} could not be loaded. Check the file path or file integrity.")
     img0 = (torch.tensor(img0.transpose(2, 0, 1)).to(device) / 255.).unsqueeze(0)
     img1 = (torch.tensor(img1.transpose(2, 0, 1)).to(device) / 255.).unsqueeze(0)
 
@@ -110,10 +102,30 @@ else:
         tmp.append(img1)
         img_list = tmp
 
-if not os.path.exists('output'):
+"""if not os.path.exists('output'):
     os.mkdir('output')
 for i in range(len(img_list)):
     if args.img[0].endswith('.exr') and args.img[1].endswith('.exr'):
         cv2.imwrite('output/img{}.exr'.format(i), (img_list[i][0]).cpu().numpy().transpose(1, 2, 0)[:h, :w], [cv2.IMWRITE_EXR_TYPE, cv2.IMWRITE_EXR_TYPE_HALF])
     else:
         cv2.imwrite('output/img{}.png'.format(i), (img_list[i][0] * 255).byte().cpu().numpy().transpose(1, 2, 0)[:h, :w])
+"""
+
+
+# Make output folder if not exist
+if not os.path.exists('output'):
+    os.mkdir('output')
+
+# Find the last used index in output folder
+existing_files = [f for f in os.listdir('output') if f.endswith('.png')]
+if existing_files:
+    # get max index from filenames like img23.png
+    existing_indices = [int(f.replace("img", "").replace(".png", "")) for f in existing_files]
+    start_index = max(existing_indices) + 1
+else:
+    start_index = 0
+
+# Save new frames without overwriting
+for i in range(len(img_list)):
+    cv2.imwrite(f'output/img{start_index + i}.png',
+                (img_list[i][0] * 255).byte().cpu().numpy().transpose(1, 2, 0)[:h, :w])
