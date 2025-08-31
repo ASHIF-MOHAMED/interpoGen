@@ -61,7 +61,14 @@ ffmpeg.exe
 ffmpeg
 ffprobe.exe
 ffprobe
+ffmpeg-master-latest-win64-gpl/
 
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Temporary and installation files
+vc_redist.x64.exe
+README-updated.md
+Untitled*.ipynb
+runner\ firstey.py
