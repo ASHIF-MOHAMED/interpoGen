@@ -99,7 +99,7 @@ def interpolate_folder(input_folder, output_folder, start_index=0):
 
         # Interpolate
         with torch.no_grad():
-            mid = model.inference(img1, img2)
+            mid = model.inference(img1, img2, 4)
 
         # Convert tensor → numpy image
         mid_img = (mid[0].cpu().permute(1, 2, 0).numpy() * 255).astype("uint8")
