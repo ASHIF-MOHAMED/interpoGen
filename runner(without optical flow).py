@@ -3,9 +3,9 @@ import sys
 import cv2
 import numpy as np
 import torch
-import torchvision
 import csv
 import time
+from skimage.metrics import structural_similarity as ssim
 
 def pixel_diff(frame1, frame2):
     """Mean absolute difference between two frames"""
@@ -24,35 +24,32 @@ def histogram_diff(frame1, frame2):
     cv2.normalize(hist2, hist2)
     return cv2.compareHist(hist1, hist2, cv2.HISTCMP_BHATTACHARYYA)
 
-
-
-def compute_metrics(frame1, frame2):
-    """Compute PixelDiff, SSIM, HistogramDiff"""
-    t1 = torch.from_numpy(frame1).to(torch.float32).to('cuda') / 255.0
-    t2 = torch.from_numpy(frame2).to(torch.float32).to('cuda') / 255.0
-    # Ensure same shape before permute
+def ssim_diff(frame1, frame2):
+    """Stable SSIM using skimage"""
+    # Resize to same size if mismatch
     if frame1.shape != frame2.shape:
         min_h = min(frame1.shape[0], frame2.shape[0])
         min_w = min(frame1.shape[1], frame2.shape[1])
-        frame1 = frame1[:min_h, :min_w, :]
-        frame2 = frame2[:min_h, :min_w, :]
-        t1 = torch.from_numpy(frame1).to(torch.float32).to('cuda') / 255.0
-        t2 = torch.from_numpy(frame2).to(torch.float32).to('cuda') / 255.0
-    t1 = t1.permute(2, 0, 1).unsqueeze(0)
-    t2 = t2.permute(2, 0, 1).unsqueeze(0)
+        frame1 = frame1[:min_h, :min_w]
+        frame2 = frame2[:min_h, :min_w]
 
-    pdiff = pixel_diff(frame1, frame2)
+    # Convert to grayscale for SSIM
+    f1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
+    f2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
 
     try:
-        ssim_val = torchvision.metrics.structural_similarity_index_measure(
-            t1, t2, data_range=1.0
-        ).item()
-        if not torch.isfinite(torch.tensor(ssim_val)):
-            ssim_val = 0.0  # fallback if NaN
+        score, _ = ssim(f1, f2, full=True, data_range=255)
+        if np.isnan(score):
+            return 0.0
+        return float(score)
     except Exception:
-        ssim_val = 0.0
-    hdiff = histogram_diff(frame1, frame2)
+        return 0.0
 
+def compute_metrics(frame1, frame2):
+    """Compute PixelDiff, SSIM, HistogramDiff"""
+    pdiff = pixel_diff(frame1, frame2)
+    ssim_val = ssim_diff(frame1, frame2)
+    hdiff = histogram_diff(frame1, frame2)
     return pdiff, ssim_val, hdiff
 
 def main():

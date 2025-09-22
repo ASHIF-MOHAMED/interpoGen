@@ -13,13 +13,13 @@ from PIL import Image
 
 def extract_frames(video_path, frames_dir):
     if not os.path.isfile(video_path):
-        print(f"❌ File not found: {video_path}")
+        print(f"File not found: {video_path}")
         sys.exit(1)
 
     # Read video properties
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
-        print("❌ Could not open the video file.")
+        print(" Could not open the video file.")
         sys.exit(1)
 
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -44,13 +44,11 @@ def extract_frames(video_path, frames_dir):
             .run(capture_stdout=True, capture_stderr=True)
         )
     except ffmpeg.Error as e:
-        print("❌ FFmpeg error:", e.stderr.decode())
+        print(" FFmpeg error:", e.stderr.decode())
         sys.exit(1)
 
     print(f"✅ Done! Extracted frames saved to: {frames_dir}")
 
-
-# -------------------- STEP 2: Resolution Enhancement --------------------
 def init_model(model_name='RealESRGAN_x2plus'):
     base_dir = r"E:\mini project\ECCV2022-RIFE\Real-ESRGAN\weights"
     model_path = os.path.join(base_dir, model_name + '.pth')
@@ -98,7 +96,6 @@ def chunkify(lst, n):
     return [lst[i::n] for i in range(n)]
 
 
-# -------------------- MAIN --------------------
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print("Usage: python script.py <input_video> <extracted_frames_dir> <upscaled_frames_dir>")
@@ -122,4 +119,4 @@ if __name__ == "__main__":
     with Pool(num_parts) as pool:
         pool.starmap(process_chunk, [(chunk, upscaled_frames_dir, model_name) for chunk in chunks])
 
-    print(f"✅ Resolution enhancement finished in {time.time() - start_time:.2f} seconds")
+    print(f"Resolution enhancement finished in {time.time() - start_time:.2f} seconds")

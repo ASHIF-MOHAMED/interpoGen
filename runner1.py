@@ -6,17 +6,14 @@ import platform
 
 def find_ffmpeg():
     """Find the FFmpeg executable path"""
-    # First check if the local ffmpeg exists
     current_dir = os.path.dirname(os.path.abspath(__file__))
     local_ffmpeg = os.path.join(current_dir, "ffmpeg.exe" if platform.system() == "Windows" else "ffmpeg")
     
     if os.path.isfile(local_ffmpeg):
         return local_ffmpeg
     
-    # Try system ffmpeg
     try:
         if platform.system() == "Windows":
-            # Check if ffmpeg is in PATH
             result = subprocess.run(["where", "ffmpeg"], capture_output=True, text=True)
             if result.returncode == 0:
                 return "ffmpeg"
