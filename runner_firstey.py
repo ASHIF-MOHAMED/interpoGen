@@ -104,6 +104,61 @@ def classify_frame(pdiff, ssim_val, hdiff, oflow):
     # Default to normal if not matched
     return "normal"
 
+def run_interpolation(frames_dir, flagged_indices):
+    """Run interpolation on flagged frame pairs"""
+    try:
+        import subprocess
+        import time
+        
+        interpolated_dir = os.path.join(os.path.dirname(frames_dir), "output")
+        os.makedirs(interpolated_dir, exist_ok=True)
+        
+        print(f"Output directory for interpolation: {interpolated_dir}")
+        
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        inference_script = os.path.join(script_dir, "inference1_img.py")
+        
+        if not os.path.isfile(inference_script):
+            print(f"Error: inference1_img.py not found at {inference_script}")
+            return False
+            
+        metrics_csv = os.path.join(frames_dir, "metrics.csv")
+        
+        if not os.path.isfile(metrics_csv):
+            print(f"Error: metrics.csv not found at {metrics_csv}")
+            return False
+        
+        cmd = [
+            sys.executable, inference_script,
+            "--input", frames_dir,
+            "--output", interpolated_dir,
+            "--selective", metrics_csv
+        ]
+        
+        print("Running interpolation command:", " ".join(cmd))
+        
+        start_time = time.time()
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=script_dir)
+        end_time = time.time()
+        
+        if result.returncode == 0:
+            print(f"Interpolation completed successfully in {end_time - start_time:.2f} seconds")
+            print("Interpolation output:")
+            print(result.stdout)
+            return True
+        else:
+            print(f"Interpolation failed with return code {result.returncode}")
+            print("Error output:")
+            print(result.stderr)
+            if result.stdout:
+                print("Standard output:")
+                print(result.stdout)
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error running interpolation: {str(e)}")
+        return False
+
 def main():
     if len(sys.argv) < 3:
         print("Usage: python runner1.py <video_path> <output_directory>")
@@ -170,7 +225,20 @@ def main():
             prev_frame = frame
 
         print(f"Flagged frame pairs for interpolation: {flagged_indices}")
-        # TODO: Call your interpolation function here, passing flagged_indices
+        
+        # Save flagged pairs to a file for interpolation
+        flagged_pairs_file = os.path.join(frames_dir, "flagged_pairs.txt")
+        with open(flagged_pairs_file, "w") as f:
+            for pair in flagged_indices:
+                f.write(f"{pair[0]},{pair[1]}\n")
+        print(f"Flagged pairs saved to: {flagged_pairs_file}")
+        
+        # Automatically run interpolation if flagged pairs exist
+        if flagged_indices:
+            print(f"\nStarting automatic interpolation for {len(flagged_indices)} flagged pairs...")
+            run_interpolation(frames_dir, flagged_indices)
+        else:
+            print("\nNo flagged pairs found - no interpolation needed")
 
     cap.release()
     end_time = time.time()
